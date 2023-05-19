@@ -794,6 +794,7 @@ function! go#debug#Start(mode, ...) abort
 
       let l:cmd += [
             \ '--headless',
+            \ '--accept-multiclient',
             \ '--api-version', '2',
             \ '--listen', go#config#DebugAddress(),
       \]
@@ -979,7 +980,14 @@ function! s:eval(arg) abort
     let l:cmd = 'RPCServer.Eval'
     let l:args = {
           \ 'expr':  a:arg,
-          \ 'scope': {'GoroutineID': l:res.result.State.currentThread.goroutineID}
+          \ 'scope': {'GoroutineID': l:res.result.State.currentThread.goroutineID},
+          \ 'cfg' : {
+              \ 'FollowPointers': v:true,
+              \ 'MaxVariableRecurse': 40,
+              \ 'MaxStringLen': 3000,
+              \ 'MaxArrayValues': 100,
+              \ 'MaxStructFields': -1,
+          \ },
       \ }
 
     let l:ResultFn = funcref('s:evalResult', [])
@@ -989,11 +997,11 @@ function! s:eval(arg) abort
             \ 'name': 'call',
             \ 'Expr': a:arg[5:],
             \ 'ReturnInfoLoadConfig': {
-              \ 'FollowPointers': v:false,
-              \ 'MaxVariableRecurse': 10,
-              \ 'MaxStringLen': 80,
-              \ 'MaxArrayValues': 10,
-              \ 'MaxStructFields': 10,
+              \ 'FollowPointers': v:true,
+              \ 'MaxVariableRecurse': 40,
+              \ 'MaxStringLen': 3000,
+              \ 'MaxArrayValues': 100,
+              \ 'MaxStructFields': -1,
             \ },
           \ }
 
@@ -1166,7 +1174,7 @@ function! s:update_variables() abort
   " MaxStructFields is the maximum number of fields read from a struct, -1 will read all fields.
   let l:cfg = {
         \ 'scope': {'GoroutineID': s:goroutineID()},
-        \ 'cfg':   {'MaxStringLen': 20, 'MaxArrayValues': 20, 'MaxVariableRecurse': 10}
+        \ 'cfg':   {'MaxStringLen': 500, 'MaxArrayValues': 100, 'MaxVariableRecurse': 30}
         \ }
 
   try
